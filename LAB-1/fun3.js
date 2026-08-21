@@ -8,7 +8,10 @@ const f3 = () => {
   console.log("f3");
 };
 function main() {
-    console.log("main 😄");
-    setTimeout(f1, 50);
-    setTimeout(f3, 30);
-    
+  console.log("main 😄");
+  setTimeout(f1, 50);
+  setTimeout(f3, 30);
+  setImmediate(f2);
+  console.log("end ✈️");
+}
+main();
