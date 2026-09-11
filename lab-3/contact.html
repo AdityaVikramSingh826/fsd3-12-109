@@ -1,0 +1,111 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Product Inquiry</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 50%;
+            margin: 50px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #ccc;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        p {
+            text-align: center;
+            color: #666;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            height: 120px;
+            resize: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            background-color: #ff9900;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #e68a00;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Contact Us</h1>
+        <p>Have a question about a product? Send us your inquiry.</p>
+
+        <form>
+            <label>Full Name</label>
+            <input type="text" placeholder="Enter your name" required>
+
+            <label>Email Address</label>
+            <input type="email" placeholder="Enter your email" required>
+
+            <label>Phone Number</label>
+            <input type="tel" placeholder="Enter your phone number">
+
+            <label>Product Name</label>
+            <input type="text" placeholder="Enter product name" required>
+
+            <label>Inquiry Type</label>
+            <select>
+                <option>Product Information</option>
+                <option>Product Availability</option>
+                <option>Pricing</option>
+                <option>Delivery</option>
+                <option>Other</option>
+            </select>
+
+            <label>Message</label>
+            <textarea placeholder="Write your inquiry here..." required></textarea>
+
+            <button type="submit">Submit Inquiry</button>
+        </form>
+    </div>
+
+</body>
+</html>
+```

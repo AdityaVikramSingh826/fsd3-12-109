@@ -1,5 +1,65 @@
 {
+  "name": "lab3",
+  "version": "1.0.0",
+  "description": "it is built in NODE.js module which allows developers to create web server ans web client without installing any external package \r one of the  msot important mdooule in NODE.js , originally designed for building scalable network application and web servers",
+  "main": "prg1.js",
+  "scripts": {
+    "start": "node prg3.js",
+    "dev": "nodemon prg7.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
   "devDependencies": {
     "nodemon": "^3.1.14"
-  }
+  },
+  "dependencies": {
+    "anymatch": "^3.1.3",
+    "balanced-match": "^4.0.4",
+    "binary-extensions": "^2.3.0",
+    "brace-expansion": "^5.0.9",
+    "braces": "^3.0.3",
+    "chokidar": "^3.6.0",
+    "debug": "^4.4.3",
+    "detect-libc": "^2.1.2",
+    "fill-range": "^7.1.1",
+    "fsevents": "^2.3.3",
+    "glob-parent": "^5.1.2",
+    "has-flag": "^3.0.0",
+    "ignore-by-default": "^1.0.1",
+    "is-binary-path": "^2.1.0",
+    "is-extglob": "^2.1.1",
+    "is-glob": "^4.0.3",
+    "is-number": "^7.0.0",
+    "lightningcss": "^1.33.0",
+    "lightningcss-darwin-arm64": "^1.33.0",
+    "minimatch": "^10.2.6",
+    "ms": "^2.1.3",
+    "nanoid": "^3.3.18",
+    "normalize-path": "^3.0.0",
+    "picocolors": "^1.1.1",
+    "picomatch": "^2.3.2",
+    "postcss": "^8.5.28",
+    "pstree.remy": "^1.1.8",
+    "readdirp": "^3.6.0",
+    "rolldown": "^1.2.8",
+    "semver": "^7.8.5",
+    "simple-update-notifier": "^2.0.0",
+    "source-map-js": "^1.2.1",
+    "supports-color": "^5.5.0",
+    "tinyglobby": "^0.2.17",
+    "to-regex-range": "^5.0.1",
+    "touch": "^3.1.1",
+    "undefsafe": "^2.0.5",
+    "vite": "^8.2.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AdityaVikramSingh826/FSD-12-109.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AdityaVikramSingh826/FSD-12-109/issues"
+  },
+  "homepage": "https://github.com/AdityaVikramSingh826/FSD-12-109#readme"
 }
