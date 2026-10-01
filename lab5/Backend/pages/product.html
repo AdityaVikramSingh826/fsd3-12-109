@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kernel 14 — a laptop you're allowed to open</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E3E7E3;
+  --panel:#F2F4F1;
+  --panel-2:#D6DCD7;
+  --ink:#141A1B;
+  --ink-2:#54605D;
+  --rule:#BFC8C1;
+  --accent:#4E3A94;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#E1DBF3;
+  --ok:#2F6B4F;
+  --sans:'Archivo','Helvetica Neue',Arial,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#131819; --panel:#1B2223; --panel-2:#252D2D;
+    --ink:#E7ECE7; --ink-2:#9AA7A2; --rule:#333C3C;
+    --accent:#A793F5; --accent-ink:#15101F; --accent-soft:#2A2350; --ok:#6FBF95;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131819; --panel:#1B2223; --panel-2:#252D2D;
+  --ink:#E7ECE7; --ink-2:#9AA7A2; --rule:#333C3C;
+  --accent:#A793F5; --accent-ink:#15101F; --accent-soft:#2A2350; --ok:#6FBF95;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:17px;
+  line-height:1.55;
+  font-weight:400;
+}
+img{max-width:100%}
+a{color:inherit}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:3px;border-radius:2px}
+
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+.rule{border:0;border-top:1px solid var(--rule);margin:0}
+
+.skip{position:absolute;left:-9999px;top:0;background:var(--accent);color:var(--accent-ink);padding:10px 16px;z-index:20}
+.skip:focus{left:8px;top:8px}
+
+/* ---------- header ---------- */
+.masthead{border-bottom:1px solid var(--rule);position:sticky;top:0;background:var(--bg);z-index:10}
+.masthead .wrap{display:flex;align-items:center;gap:28px;height:62px}
+.brand{font-weight:800;letter-spacing:-0.02em;font-size:19px;text-decoration:none}
+.brand span{color:var(--accent)}
+.navlinks{display:flex;gap:22px;margin-left:auto;font-size:15px}
+.navlinks a{color:var(--ink-2);text-decoration:none}
+.navlinks a:hover{color:var(--ink)}
+@media (max-width:720px){.navlinks{display:none}}
+
+.btn{
+  display:inline-block;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);
+  font:inherit;font-weight:600;font-size:15px;padding:9px 18px;border-radius:6px;text-decoration:none;cursor:pointer;
+}
+.btn:hover{filter:brightness(1.12)}
+.btn-quiet{background:transparent;color:var(--ink);border-color:var(--rule)}
+.btn-quiet:hover{border-color:var(--ink);filter:none}
+.masthead .btn{margin-left:8px}
+@media (max-width:720px){.masthead .btn{margin-left:auto}}
+
+/* ---------- hero ---------- */
+.hero{padding:64px 0 8px}
+.hero h1{
+  font-size:clamp(2.6rem,7vw,4.9rem);
+  line-height:0.98;letter-spacing:-0.035em;font-weight:800;
+  margin:0 0 20px;max-width:15ch;
+}
+.hero p{margin:0;max-width:56ch;color:var(--ink-2);font-size:1.12rem}
+.hero .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
+.stamp{font-family:var(--mono);font-size:13px;color:var(--ink-2);margin:0 0 18px}
+.stamp b{color:var(--ink);font-weight:500}
+
+/* ---------- drawing ---------- */
+.drawing-scroll{overflow-x:auto;padding:34px 0 10px;-webkit-overflow-scrolling:touch}
+.drawing-scroll svg{display:block;min-width:880px;width:100%;height:auto}
+.dwg-body{fill:var(--panel);stroke:var(--ink);stroke-width:1.6}
+.dwg-seam{stroke:var(--rule);stroke-width:1.2}
+.dwg-dim{stroke:var(--ink-2);stroke-width:1}
+.dwg-dimtext{fill:var(--ink-2);font-family:var(--mono);font-size:12px}
+.dwg-side{fill:var(--ink-2);font-family:var(--mono);font-size:12px}
+.port{cursor:default}
+.port-shape{fill:var(--panel-2);stroke:var(--ink);stroke-width:1.3;transition:fill .12s ease}
+.port-lead{stroke:var(--rule);stroke-width:1;transition:stroke .12s ease}
+.port-label{fill:var(--ink);font-family:var(--mono);font-size:12.5px;transition:fill .12s ease}
+.port-sub{fill:var(--ink-2);font-family:var(--mono);font-size:11px}
+.port:hover .port-shape,.port:focus .port-shape{fill:var(--accent)}
+.port:hover .port-lead,.port:focus .port-lead{stroke:var(--accent)}
+.port:hover .port-label,.port:focus .port-label{fill:var(--accent)}
+.port:focus{outline:none}
+.port:focus .port-label{text-decoration:underline}
+
+/* ---------- numbers strip ---------- */
+.strip{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin-top:22px}
+.strip .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.num{padding:26px 22px 24px;border-left:1px solid var(--rule)}
+.num:first-child{border-left:0;padding-left:0}
+.num b{display:block;font-family:var(--mono);font-size:1.85rem;font-weight:500;letter-spacing:-0.03em;line-height:1}
+.num span{display:block;color:var(--ink-2);font-size:14px;margin-top:8px}
+@media (max-width:760px){
+  .strip .wrap{grid-template-columns:repeat(2,1fr)}
+  .num{padding:20px 16px;border-top:1px solid var(--rule)}
+  .num:nth-child(-n+2){border-top:0}
+  .num:nth-child(odd){border-left:0;padding-left:0}
+}
+
+/* ---------- features ---------- */
+.features{padding:76px 0 66px;display:grid;grid-template-columns:repeat(12,1fr);gap:44px 40px}
+.blk-open{grid-column:span 7}
+.blk-heat{grid-column:span 5}
+.blk-boot{grid-column:span 12;border-top:1px solid var(--rule);padding-top:38px;display:grid;grid-template-columns:repeat(12,1fr);gap:40px}
+.blk-boot .bt{grid-column:span 5}
+.blk-boot .bb{grid-column:span 7}
+@media (max-width:860px){
+  .features{grid-template-columns:1fr;gap:52px}
+  .blk-open,.blk-heat,.blk-boot,.blk-boot .bt,.blk-boot .bb{grid-column:auto}
+  .blk-boot{grid-template-columns:1fr;gap:24px}
+}
+.features h2{font-size:clamp(1.6rem,3.2vw,2.15rem);line-height:1.08;letter-spacing:-0.025em;font-weight:700;margin:0 0 14px;max-width:20ch}
+.features p{margin:0 0 18px;color:var(--ink-2);max-width:60ch}
+
+.parts{width:100%;border-collapse:collapse;font-size:15px}
+.parts th{text-align:left;font-weight:500;color:var(--ink-2);font-size:13px;padding:0 0 8px;border-bottom:1px solid var(--rule)}
+.parts td{padding:9px 0;border-bottom:1px solid var(--rule)}
+.parts td:last-child{text-align:right;font-family:var(--mono);font-size:14px}
+
+.bars{margin:22px 0 0}
+.bar-row{margin-bottom:14px}
+.bar-top{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px}
+.bar-top b{font-family:var(--mono);font-weight:500}
+.bar-track{height:12px;background:var(--panel-2);border-radius:2px;overflow:hidden}
+.bar-fill{height:100%;background:var(--accent)}
+.bar-fill.dim{background:var(--ink-2);opacity:.45}
+.bar-note{font-size:13.5px;color:var(--ink-2);margin:14px 0 0}
+
+.distros{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.distros li{font-family:var(--mono);font-size:13px;border:1px solid var(--rule);border-radius:999px;padding:5px 12px}
+.distros li.ok{border-color:var(--ok);color:var(--ok)}
+
+/* ---------- configurator ---------- */
+.config{background:var(--panel);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:64px 0}
+.config-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:56px;align-items:start}
+@media (max-width:860px){.config-grid{grid-template-columns:1fr;gap:36px}}
+.config h2{font-size:clamp(1.7rem,3.4vw,2.3rem);letter-spacing:-0.025em;line-height:1.08;font-weight:700;margin:0 0 10px}
+.config .lede{color:var(--ink-2);margin:0 0 34px;max-width:52ch}
+fieldset{border:0;padding:0;margin:0 0 28px}
+legend{font-size:14px;color:var(--ink-2);padding:0;margin-bottom:10px}
+.choices{display:flex;flex-wrap:wrap;gap:10px}
+.choices input{position:absolute;opacity:0;width:1px;height:1px}
+.choices label{
+  display:inline-flex;align-items:baseline;gap:10px;cursor:pointer;
+  border:1px solid var(--rule);border-radius:7px;padding:10px 15px;background:var(--bg);
+  font-size:15px;
+}
+.choices label .delta{font-family:var(--mono);font-size:12.5px;color:var(--ink-2)}
+.choices input:checked + label{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--accent-soft)}
+.choices input:checked + label .delta{color:var(--accent)}
+.choices input:focus-visible + label{outline:2.5px solid var(--accent);outline-offset:3px}
+
+.tally{border:1px solid var(--rule);border-radius:10px;background:var(--bg);padding:24px;position:sticky;top:86px}
+@media (max-width:860px){.tally{position:static}}
+.tally .price{font-family:var(--mono);font-size:2.5rem;font-weight:500;letter-spacing:-0.04em;line-height:1;margin:0 0 4px}
+.tally .price.bump{animation:bump .4s ease}
+@keyframes bump{0%{color:var(--accent)}100%{color:var(--ink)}}
+@media (prefers-reduced-motion: reduce){
+  .tally .price.bump{animation:none}
+  *{transition-duration:0.01ms !important}
+}
+.tally .incl{font-size:13.5px;color:var(--ink-2);margin:0 0 20px}
+.tally dl{margin:0 0 22px;font-size:14.5px}
+.tally dl div{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid var(--rule)}
+.tally dt{color:var(--ink-2)}
+.tally dd{margin:0;font-family:var(--mono);font-size:13.5px;text-align:right}
+.tally .btn{width:100%;text-align:center}
+.tally .ship{font-size:13px;color:var(--ink-2);margin:12px 0 0;text-align:center}
+
+/* ---------- spec table ---------- */
+.specs{padding:70px 0 60px}
+.specs h2{font-size:clamp(1.6rem,3.2vw,2.1rem);letter-spacing:-0.025em;font-weight:700;margin:0 0 6px}
+.specs .lede{color:var(--ink-2);margin:0 0 30px;max-width:56ch}
+.table-scroll{overflow-x:auto}
+.spectable{width:100%;border-collapse:collapse;min-width:520px}
+.spectable th{
+  text-align:left;vertical-align:top;font-weight:500;color:var(--ink-2);font-size:14.5px;
+  padding:14px 24px 14px 0;border-bottom:1px solid var(--rule);width:30%;
+}
+.spectable td{
+  padding:14px 0;border-bottom:1px solid var(--rule);font-family:var(--mono);font-size:14px;line-height:1.6;
+}
+
+/* ---------- footer ---------- */
+.foot{border-top:1px solid var(--rule);padding:34px 0 46px;color:var(--ink-2);font-size:14px}
+.foot .wrap{display:flex;flex-wrap:wrap;gap:16px 28px;align-items:baseline}
+.foot .note{margin-left:auto;max-width:44ch}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="brand" href="#top">Kernel<span>.</span></a>
+    <nav class="navlinks" aria-label="Sections">
+      <a href="#ports">Ports</a>
+      <a href="#inside">Inside</a>
+      <a href="#configure">Configure</a>
+      <a href="#specs">Spec sheet</a>
+    </nav>
+    <a class="btn" href="#configure">Configure yours</a>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="hero" id="top">
+  <div class="wrap">
+    <p class="stamp">Kernel 14 &nbsp;/&nbsp; rev <b>C</b> &nbsp;/&nbsp; shipping now</p>
+    <h1>A laptop you're allowed to open.</h1>
+    <p>Fourteen inches, 1.29 kg, and nothing glued shut. Every part is numbered, priced, and sold on its own — so the machine you buy this year is the one you're still using in 2032.</p>
+    <div class="cta">
+      <a class="btn" href="#configure">Configure yours</a>
+      <a class="btn btn-quiet" href="#specs">Read the spec sheet</a>
+    </div>
+  </div>
+</section>
+
+<section id="ports" aria-labelledby="ports-h">
+  <h2 id="ports-h" class="visually-hidden" style="position:absolute;left:-9999px">Port layout</h2>
+  <div class="wrap">
+    <div class="drawing-scroll">
+      <svg viewBox="0 0 960 345" role="img" aria-label="Scale drawing of the Kernel 14's left and right edges, 313 millimetres wide and 15.8 millimetres thick, with every port labelled.">
+
+        <!-- overall width dimension -->
+        <g class="dwg-dim" fill="none">
+          <path d="M82 22 L82 34 M862 22 L862 34 M82 28 L400 28 M544 28 L862 28"/>
+        </g>
+        <text class="dwg-dimtext" x="472" y="32" text-anchor="middle">313.0 mm</text>
+
+        <!-- ===== LEFT EDGE ===== -->
+        <text class="dwg-side" x="8" y="122">left</text>
+        <path class="dwg-body" d="M92 98 L852 106 Q862 106 862 116 L862 128 Q862 138 852 138 L92 138 Q82 138 82 128 L82 108 Q82 98 92 98 Z"/>
+        <path class="dwg-seam" d="M84 116 L860 122"/>
+
+        <!-- thickness dimension -->
+        <g class="dwg-dim" fill="none"><path d="M878 98 L878 138 M872 98 L884 98 M872 138 L884 138"/></g>
+        <text class="dwg-dimtext" x="890" y="122">15.8 mm</text>
+
+        <g class="port" tabindex="0" role="group" aria-label="USB-C, 40 gigabits per second, 100 watt charging">
+          <line class="port-lead" x1="176" y1="62" x2="176" y2="124"/>
+          <rect class="port-shape" x="163" y="124" width="26" height="8" rx="4"/>
+          <text class="port-label" x="176" y="54" text-anchor="middle">USB-C</text>
+          <text class="port-sub" x="176" y="40" text-anchor="middle">40 Gb/s · 100 W</text>
+        </g>
+
+        <g class="port" tabindex="0" role="group" aria-label="Second USB-C, 40 gigabits per second, 100 watt charging">
+          <line class="port-lead" x1="246" y1="62" x2="246" y2="124"/>
+          <rect class="port-shape" x="233" y="124" width="26" height="8" rx="4"/>
+          <text class="port-label" x="246" y="54" text-anchor="middle">USB-C</text>
+          <text class="port-sub" x="246" y="40" text-anchor="middle">40 Gb/s · 100 W</text>
+        </g>
+
+        <g class="port" tabindex="0" role="group" aria-label="USB-A, 10 gigabits per second">
+          <line class="port-lead" x1="336" y1="72" x2="336" y2="124"/>
+          <rect class="port-shape" x="320" y="124" width="32" height="9" rx="1.5"/>
+          <text class="port-label" x="336" y="64" text-anchor="middle">USB-A</text>
+          <text class="port-sub" x="336" y="50" text-anchor="middle">10 Gb/s</text>
+        </g>
+
+        <g class="port" tabindex="0" role="group" aria-label="3.5 millimetre headphone jack">
+          <line class="port-lead" x1="424" y1="62" x2="424" y2="121"/>
+          <circle class="port-shape" cx="424" cy="128" r="7"/>
+          <text class="port-label" x="424" y="54" text-anchor="middle">3.5 mm</text>
+          <text class="port-sub" x="424" y="40" text-anchor="middle">headphones</text>
+        </g>
+
+        <g class="port" tabindex="0" role="group" aria-label="Ventilation intake">
+          <line class="port-lead" x1="640" y1="72" x2="640" y2="124"/>
+          <g class="port-shape"><rect x="596" y="124" width="88" height="9" rx="2"/></g>
+          <text class="port-label" x="640" y="64" text-anchor="middle">intake</text>
+          <text class="port-sub" x="640" y="50" text-anchor="middle">dust-filtered</text>
+        </g>
+
+        <!-- ===== RIGHT EDGE ===== -->
+        <text class="dwg-side" x="8" y="242">right</text>
+        <path class="dwg-body" d="M92 218 L852 226 Q862 226 862 236 L862 248 Q862 258 852 258 L92 258 Q82 258 82 248 L82 228 Q82 218 92 218 Z"/>
+        <path class="dwg-seam" d="M84 236 L860 242"/>
+
+        <g class="port" tabindex="0" role="group" aria-label="USB-C, 40 gigabits per second, 100 watt charging">
+          <line class="port-lead" x1="200" y1="253" x2="200" y2="292"/>
+          <rect class="port-shape" x="187" y="245" width="26" height="8" rx="4"/>
+          <text class="port-label" x="200" y="308" text-anchor="middle">USB-C</text>
+          <text class="port-sub" x="200" y="322" text-anchor="middle">charges either side</text>
+        </g>
+
+        <g class="port" tabindex="0" role="group" aria-label="HDMI 2.1, supports 4K at 120 hertz">
+          <line class="port-lead" x1="316" y1="255" x2="316" y2="292"/>
+          <path class="port-shape" d="M296 244 L336 244 L336 251 L332 254 L300 254 L296 251 Z"/>
+          <text class="port-label" x="316" y="308" text-anchor="middle">HDMI 2.1</text>
+          <text class="port-sub" x="316" y="322" text-anchor="middle">4K 120 Hz</text>
+        </g>
+
+        <g class="port" tabindex="0" role="group" aria-label="microSD card slot, UHS-two">
+          <line class="port-lead" x1="416" y1="253" x2="416" y2="292"/>
+          <rect class="port-shape" x="402" y="246" width="28" height="5" rx="1"/>
+          <text class="port-label" x="416" y="308" text-anchor="middle">microSD</text>
+          <text class="port-sub" x="416" y="322" text-anchor="middle">UHS-II</text>
+        </g>
+
+        <g class="port" tabindex="0" role="group" aria-label="Eight captive Torx T5 screws on the underside">
+          <line class="port-lead" x1="700" y1="255" x2="700" y2="292"/>
+          <g class="port-shape">
+            <circle cx="664" cy="249" r="4"/><circle cx="682" cy="249" r="4"/>
+            <circle cx="700" cy="249" r="4"/><circle cx="718" cy="249" r="4"/>
+            <circle cx="736" cy="249" r="4"/>
+          </g>
+          <text class="port-label" x="700" y="308" text-anchor="middle">Torx T5 ×8</text>
+          <text class="port-sub" x="700" y="322" text-anchor="middle">captive, underside</text>
+        </g>
+
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section class="strip">
+  <div class="wrap">
+    <div class="num"><b>8</b><span>screws between you and the mainboard</span></div>
+    <div class="num"><b>99 Wh</b><span>battery, swappable without tools</span></div>
+    <div class="num"><b>1.29 kg</b><span>with the 99 Wh cell fitted</span></div>
+    <div class="num"><b>60 W</b><span>held indefinitely, not just for 10 seconds</span></div>
+  </div>
+</section>
+
+<section class="features wrap" id="inside">
+  <div class="blk-open">
+    <h2>Eight screws, then you're inside.</h2>
+    <p>They're captive Torx T5, so they stay in the panel instead of rolling under the desk. No adhesive, no clips to snap, no warranty sticker. The screwdriver ships in the box with the machine.</p>
+    <p>Every part has a number and a price. Buy one, and the schematic and board files come with it.</p>
+    <table class="parts">
+      <thead><tr><th scope="col">Part</th><th scope="col">Sold separately</th></tr></thead>
+      <tbody>
+        <tr><td>Mainboard, 12-core</td><td>₹42,000</td></tr>
+        <tr><td>Display assembly</td><td>₹14,500</td></tr>
+        <tr><td>Battery, 99 Wh</td><td>₹6,800</td></tr>
+        <tr><td>Keyboard deck</td><td>₹4,200</td></tr>
+        <tr><td>Hinge set</td><td>₹900</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="blk-heat">
+    <h2>Rated at the wattage it can actually hold.</h2>
+    <p>Most thin laptops quote a boost figure they can sustain for about ten seconds. This is what a 30-minute compile looks like.</p>
+    <div class="bars">
+      <div class="bar-row">
+        <div class="bar-top"><span>First 10 seconds</span><b>85 W</b></div>
+        <div class="bar-track"><div class="bar-fill dim" style="width:100%"></div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-top"><span>After 30 minutes</span><b>60 W</b></div>
+        <div class="bar-track"><div class="bar-fill" style="width:71%"></div></div>
+      </div>
+    </div>
+    <p class="bar-note">Measured at 25 °C ambient, lid open, fan curve on the default profile. The curve is a text file you can edit.</p>
+  </div>
+
+  <div class="blk-boot">
+    <div class="bt">
+      <h2>It boots what you point at it.</h2>
+    </div>
+    <div class="bb">
+      <p>Firmware is coreboot, unlocked, and flashable from userspace. Secure Boot is on by default and yours to turn off — no vendor key holds the machine hostage. These are the images we test on every firmware release:</p>
+      <ul class="distros">
+        <li class="ok">Fedora 43</li>
+        <li class="ok">Ubuntu 26.04</li>
+        <li class="ok">Debian 13</li>
+        <li class="ok">Arch</li>
+        <li class="ok">NixOS 26.05</li>
+        <li>Windows 11</li>
+        <li>Qubes 4.3</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="config" id="configure">
+  <div class="wrap config-grid">
+    <div>
+      <h2>Build it the way you'll use it.</h2>
+      <p class="lede">Memory and storage are socketed, so nothing here is permanent. Start low and add a stick in two years if you'd rather.</p>
+
+      <fieldset>
+        <legend>Processor</legend>
+        <div class="choices" id="grp-cpu"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Memory — two DDR5 SO-DIMM slots</legend>
+        <div class="choices" id="grp-ram"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Storage — two M.2 2280 slots</legend>
+        <div class="choices" id="grp-ssd"></div>
+      </fieldset>
+    </div>
+
+    <div class="tally">
+      <p class="price" id="price" aria-live="polite">₹1,24,900</p>
+      <p class="incl">Including GST. Free shipping in India.</p>
+      <dl>
+        <div><dt>Processor</dt><dd id="v-cpu">8-core, 28 W</dd></div>
+        <div><dt>Memory</dt><dd id="v-ram">16 GB</dd></div>
+        <div><dt>Storage</dt><dd id="v-ssd">512 GB</dd></div>
+        <div><dt>Runtime, light use</dt><dd id="v-hours">14 h</dd></div>
+        <div><dt>Second M.2 slot</dt><dd id="v-slot">free</dd></div>
+      </dl>
+      <button class="btn" type="button" id="order">Add to order</button>
+      <p class="ship">Ships in 5 days. Screwdriver included.</p>
+    </div>
+  </div>
+</section>
+
+<section class="specs wrap" id="specs">
+  <h2>Full spec sheet</h2>
+  <p class="lede">Rev C, September 2026. Superseded revisions stay documented and stay supported.</p>
+  <div class="table-scroll">
+    <table class="spectable">
+      <tbody>
+        <tr><th scope="row">Display</th><td>14.2 in, 2880 × 1800, 120 Hz variable, 500 nits, matte, 16:10</td></tr>
+        <tr><th scope="row">Processor</th><td>8-core / 28 W or 12-core / 45 W, both socketed to the mainboard</td></tr>
+        <tr><th scope="row">Memory</th><td>2 × SO-DIMM DDR5-5600, 8–64 GB, user replaceable</td></tr>
+        <tr><th scope="row">Storage</th><td>2 × M.2 2280 NVMe, PCIe 4.0 ×4</td></tr>
+        <tr><th scope="row">Battery</th><td>99 Wh lithium polymer, released by a latch, no tools</td></tr>
+        <tr><th scope="row">Charging</th><td>100 W USB-C, either side of the machine</td></tr>
+        <tr><th scope="row">Keyboard</th><td>1.5 mm travel, per-key backlight, hot-swappable deck</td></tr>
+        <tr><th scope="row">Ports, left</th><td>USB-C 40 Gb/s ×2, USB-A 10 Gb/s, 3.5 mm</td></tr>
+        <tr><th scope="row">Ports, right</th><td>USB-C 40 Gb/s, HDMI 2.1, microSD UHS-II</td></tr>
+        <tr><th scope="row">Wireless</th><td>Wi-Fi 7 and Bluetooth 5.4 on a socketed M.2 2230 card</td></tr>
+        <tr><th scope="row">Camera</th><td>1080p with a physical shutter switch, wired to the sensor</td></tr>
+        <tr><th scope="row">Chassis</th><td>Recycled aluminium, 8 captive Torx T5 screws, no adhesive</td></tr>
+        <tr><th scope="row">Firmware</th><td>coreboot, unlocked, flashable from a running system</td></tr>
+        <tr><th scope="row">Dimensions</th><td>313.0 × 224.6 × 15.8 mm</td></tr>
+        <tr><th scope="row">Weight</th><td>1.29 kg</td></tr>
+        <tr><th scope="row">Warranty</th><td>3 years. Parts sold individually for at least 10.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>Kernel Computers</span>
+    <span>Bengaluru</span>
+    <span>Schematics on the support site</span>
+    <span class="note">Kernel 14 is a fictional product built as a design example. Prices, figures and part numbers are invented.</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var BASE = 124900;
+
+  var opts = {
+    cpu: [
+      { id: 'cpu8',  label: '8-core, 28 W',  add: 0,     hours: 14 },
+      { id: 'cpu12', label: '12-core, 45 W', add: 22000, hours: 11 }
+    ],
+    ram: [
+      { id: 'ram16', label: '16 GB', add: 0 },
+      { id: 'ram32', label: '32 GB', add: 9000 },
+      { id: 'ram64', label: '64 GB', add: 26000 }
+    ],
+    ssd: [
+      { id: 'ssd512', label: '512 GB', add: 0,     slot: 'free' },
+      { id: 'ssd1',   label: '1 TB',   add: 7000,  slot: 'free' },
+      { id: 'ssd2',   label: '2 TB',   add: 18000, slot: 'in use' }
+    ]
+  };
+
+  var picked = { cpu: 0, ram: 0, ssd: 0 };
+  var inr = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
+
+  function money(n) { return '\u20B9' + inr.format(n); }
+
+  function build(group) {
+    var host = document.getElementById('grp-' + group);
+    opts[group].forEach(function (o, i) {
+      var input = document.createElement('input');
+      input.type = 'radio';
+      input.name = group;
+      input.id = o.id;
+      input.checked = i === 0;
+      input.addEventListener('change', function () { picked[group] = i; update(true); });
+
+      var label = document.createElement('label');
+      label.setAttribute('for', o.id);
+      label.appendChild(document.createTextNode(o.label));
+
+      var delta = document.createElement('span');
+      delta.className = 'delta';
+      delta.textContent = o.add === 0 ? 'included' : '+ ' + money(o.add);
+      label.appendChild(delta);
+
+      host.appendChild(input);
+      host.appendChild(label);
+    });
+  }
+
+  function update(animate) {
+    var cpu = opts.cpu[picked.cpu];
+    var ram = opts.ram[picked.ram];
+    var ssd = opts.ssd[picked.ssd];
+    var total = BASE + cpu.add + ram.add + ssd.add;
+
+    var price = document.getElementById('price');
+    price.textContent = money(total);
+    document.getElementById('v-cpu').textContent = cpu.label;
+    document.getElementById('v-ram').textContent = ram.label;
+    document.getElementById('v-ssd').textContent = ssd.label;
+    document.getElementById('v-hours').textContent = cpu.hours + ' h';
+    document.getElementById('v-slot').textContent = ssd.slot;
+
+    if (animate) {
+      price.classList.remove('bump');
+      void price.offsetWidth;
+      price.classList.add('bump');
+    }
+  }
+
+  ['cpu', 'ram', 'ssd'].forEach(build);
+  update(false);
+
+  document.getElementById('order').addEventListener('click', function () {
+    var b = this;
+    b.textContent = 'Added to order';
+    b.disabled = true;
+    setTimeout(function () { b.textContent = 'Add to order'; b.disabled = false; }, 1800);
+  });
+})();
+</script>
+
+</body>
+</html>
